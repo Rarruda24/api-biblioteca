@@ -30,7 +30,6 @@ Durante o desenvolvimento serão implementados recursos como:
 - Consultas personalizadas
 - Validação de dados
 - Documentação dos endpoints
-- HATEOAS
 - Tratamento de erros
 - Recursos de segurança e controle de acesso
 
