@@ -14,7 +14,7 @@ A aplicação será desenvolvida utilizando Java e Spring Boot, com persistênci
 - H2 Database
 - Bean Validation
 - Swagger / OpenAPI
-- HATEOAS
+- Spring- HATEOAS
 
 ## Sobre o projeto
 
