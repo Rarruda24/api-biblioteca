@@ -28,6 +28,7 @@ public class Autor {
     private String nacionalidade;
 
     @Past(message = "A data de nascimento deve ser anterior à data atual")
+    @Column(name = "data_nascimento")
     private LocalDate dataNascimento;
 
     @OneToMany(mappedBy = "autor")

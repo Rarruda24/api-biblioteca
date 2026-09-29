@@ -12,9 +12,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,9 +49,9 @@ public class AutorController {
                                     value = """
                                             {
                                               "id": 1,
-                                              "nome": "Machado de Assis",
+                                              "nome": "Rodrigo Arruda",
                                               "nacionalidade": "Brasileira",
-                                              "dataNascimento": "1839-06-21"
+                                              "dataNascimento": "2006-08-24"
                                             }
                                             """
                             )
@@ -73,9 +72,9 @@ public class AutorController {
                             examples = @ExampleObject(
                                     value = """
                                             {
-                                              "nome": "Machado de Assis",
+                                              "nome": "Rodrigo Arruda",
                                               "nacionalidade": "Brasileira",
-                                              "dataNascimento": "1839-06-21"
+                                              "dataNascimento": "2006-08-24"
                                             }
                                             """
                             )
@@ -105,10 +104,22 @@ public class AutorController {
             )
     })
     public ResponseEntity<Page<Autor>> listar(
-            @ParameterObject Pageable pageable) {
+            @Parameter(
+                    description = "Número da página.",
+                    example = "0"
+            )
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(
+                    description = "Quantidade de registros por página.",
+                    example = "20"
+            )
+            @RequestParam(defaultValue = "20") int size) {
 
         return ResponseEntity.ok(
-                autorService.listar(pageable)
+                autorService.listar(
+                        PageRequest.of(page, size)
+                )
         );
     }
 
@@ -186,9 +197,9 @@ public class AutorController {
                             examples = @ExampleObject(
                                     value = """
                                             {
-                                              "nome": "Machado de Assis",
+                                              "nome": "Rodrigo Arruda",
                                               "nacionalidade": "Brasileira",
-                                              "dataNascimento": "1839-06-21"
+                                              "dataNascimento": "2006-08-24"
                                             }
                                             """
                             )
@@ -250,14 +261,27 @@ public class AutorController {
             @Parameter(
                     description = "Nome ou parte do nome do autor.",
                     required = true,
-                    example = "Machado"
+                    example = "Rodrigo"
             )
             @RequestParam String nome,
 
-            @ParameterObject Pageable pageable) {
+            @Parameter(
+                    description = "Número da página.",
+                    example = "0"
+            )
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(
+                    description = "Quantidade de registros por página.",
+                    example = "20"
+            )
+            @RequestParam(defaultValue = "20") int size) {
 
         return ResponseEntity.ok(
-                autorService.buscarPorNome(nome, pageable)
+                autorService.buscarPorNome(
+                        nome,
+                        PageRequest.of(page, size)
+                )
         );
     }
 }

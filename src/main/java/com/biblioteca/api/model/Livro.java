@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,20 +18,23 @@ public class Livro {
     private Long id;
 
     @NotBlank(message = "O título do livro é obrigatório")
-    @Size(min = 2, max = 150, message = "O título deve ter entre 2 e 150 caracteres")
-    @Column(nullable = false, length = 150)
+    @Size(min = 2, max = 200, message = "O título deve ter entre 2 e 200 caracteres")
+    @Column(nullable = false, length = 200)
     private String titulo;
 
-    @NotBlank(message = "O ISBN é obrigatório")
+    @NotBlank(message = "O ISBN do livro é obrigatório")
+    @Size(min = 10, max = 20, message = "O ISBN deve ter entre 10 e 20 caracteres")
     @Column(nullable = false, unique = true, length = 20)
     private String isbn;
 
     @NotNull(message = "O ano de publicação é obrigatório")
     @Positive(message = "O ano de publicação deve ser positivo")
+    @Column(nullable = false)
     private Integer anoPublicacao;
 
     @NotNull(message = "A quantidade de páginas é obrigatória")
     @Positive(message = "A quantidade de páginas deve ser positiva")
+    @Column(nullable = false)
     private Integer quantidadePaginas;
 
     @ManyToOne
@@ -47,7 +51,7 @@ public class Livro {
             joinColumns = @JoinColumn(name = "livro_id"),
             inverseJoinColumns = @JoinColumn(name = "categoria_id")
     )
-    private List<Categoria> categorias;
+    private List<Categoria> categorias = new ArrayList<>();
 
     public Livro() {
     }
