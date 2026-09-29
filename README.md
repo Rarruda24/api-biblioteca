@@ -1,92 +1,160 @@
 # API Biblioteca
 
-API REST para gerenciamento de uma biblioteca.
+API REST desenvolvida em Java com Spring Boot para gerenciamento de uma biblioteca.
 
-A aplicação será desenvolvida utilizando Java e Spring Boot, com persistência de dados em banco H2.
+O projeto foi desenvolvido com o objetivo de aplicar conceitos de desenvolvimento de APIs REST, persistência de dados, modelagem de entidades, relacionamentos entre tabelas, validação de dados, operações CRUD, paginação, consultas personalizadas e documentação de endpoints.
 
-## Tecnologias
+A aplicação permite o gerenciamento de autores, editoras, livros, categorias, leitores e empréstimos.
 
-- Java 17+
-- Spring Boot
+## Tecnologias utilizadas
+
+- Java 17
+- Spring Boot 4.1.1
 - Maven
 - Spring Web
 - Spring Data JPA
 - H2 Database
 - Bean Validation
-- Swagger / OpenAPI
-- Spring- HATEOAS
+- Springdoc OpenAPI
+- Swagger UI
+- Spring HATEOAS
 
-## Sobre o projeto
+## Funcionalidades implementadas
 
-A API Biblioteca tem como objetivo disponibilizar os recursos necessários para o gerenciamento de uma biblioteca, incluindo livros, autores, categorias, usuários e empréstimos.
+Atualmente, a API possui as seguintes funcionalidades:
 
-O projeto será desenvolvido seguindo uma arquitetura organizada em camadas, buscando separar as responsabilidades de cada parte da aplicação.
-
-Durante o desenvolvimento serão implementados recursos como:
-
-- Cadastro, consulta, atualização e exclusão de registros
-- Relacionamentos entre entidades
-- Paginação de resultados
+- Cadastro de autores
+- Consulta de autores
+- Atualização de autores
+- Exclusão de autores
+- Cadastro de editoras
+- Consulta de editoras
+- Atualização de editoras
+- Exclusão de editoras
+- Cadastro de livros
+- Consulta de livros
+- Atualização de livros
+- Exclusão de livros
+- Cadastro de categorias
+- Consulta de categorias
+- Atualização de categorias
+- Exclusão de categorias
+- Cadastro de leitores
+- Consulta de leitores
+- Atualização de leitores
+- Exclusão de leitores
+- Cadastro de empréstimos
+- Consulta de empréstimos
+- Atualização de empréstimos
+- Exclusão de empréstimos
 - Consultas personalizadas
-- Validação de dados
-- Documentação dos endpoints
-- Tratamento de erros
-- Recursos de segurança e controle de acesso
+- Paginação dos resultados
+- Validação dos dados recebidos
+- Relacionamentos entre as entidades
+- Controle do status dos empréstimos através de enum
+- Documentação dos endpoints com Swagger / OpenAPI
+
+## Objetivo do projeto
+
+A API Biblioteca foi desenvolvida como projeto acadêmico para colocar em prática os principais conceitos utilizados no desenvolvimento de uma API REST utilizando o ecossistema Java e Spring.
+
+A aplicação foi estruturada de forma a separar as responsabilidades entre as diferentes camadas do sistema, facilitando a organização, manutenção e evolução do projeto.
+
+A estrutura utilizada atualmente separa:
+
+- Modelos
+- Repositórios
+- Serviços
+- Controladores
+- Configurações
 
 ## Configuração inicial
 
-O projeto foi criado utilizando o Spring Initializr, com Maven como gerenciador de dependências.
+O projeto foi criado utilizando o Spring Initializr.
 
-### Configurações
+As configurações utilizadas na criação inicial foram:
 
 | Configuração | Valor |
 |---|---|
+| Project | Maven |
+| Language | Java |
+| Spring Boot | 4.1.1 |
 | Group | `com.biblioteca` |
 | Artifact | `api-biblioteca` |
-| Package | `com.biblioteca.api` |
-| Java | `17` |
-| Packaging | `Jar` |
-| Build | `Maven` |
+| Name | `API Biblioteca` |
+| Package name | `com.biblioteca.api` |
+| Packaging | Jar |
+| Java | 17 |
 
-### Dependências iniciais
+## Dependências
 
-Na configuração inicial do projeto foram adicionadas:
+As principais dependências utilizadas no projeto são:
 
-- **Spring Web** — desenvolvimento da API REST
-- **Spring Data JPA** — persistência e acesso aos dados
-- **H2 Database** — banco de dados utilizado pela aplicação
+### Spring Web
 
-Outras dependências serão adicionadas conforme cada etapa do desenvolvimento.
+Responsável pela criação dos endpoints REST da aplicação, permitindo o recebimento e processamento das requisições HTTP.
 
-## Estrutura do projeto
+### Spring Data JPA
 
-A estrutura inicial do projeto está organizada da seguinte forma:
+Utilizado para realizar a persistência dos dados e o acesso às entidades através do JPA e Hibernate.
+
+### H2 Database
+
+Banco de dados utilizado durante o desenvolvimento da aplicação.
+
+### Bean Validation
+
+Utilizado para validar os dados recebidos nos endpoints de cadastro e atualização.
+
+### Springdoc OpenAPI
+
+Utilizado para gerar a especificação OpenAPI da aplicação e disponibilizar a documentação dos endpoints através do Swagger UI.
+
+### Spring HATEOAS
+
+Dependência adicionada ao projeto para a implementação dos recursos HATEOAS prevista para a próxima etapa do desenvolvimento.
+
+## Arquitetura da aplicação
+
+A aplicação está organizada em camadas.
 
 ```text
-API Biblioteca
-├── .mvn/
-│   └── wrapper/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/
-│   │   │       └── biblioteca/
-│   │   │           └── api/
-│   │   │               └── ApiBibliotecaApplication.java
-│   │   │
-│   │   └── resources/
-│   │       └── application.properties
-│   │
-│   └── test/
-│       └── java/
-│           └── com/
-│               └── biblioteca/
-│                   └── api/
-│                       └── ApiBibliotecaApplicationTests.java
+com.biblioteca.api
 │
-├── .gitattributes
-├── .gitignore
-├── HELP.md
-├── mvnw
-├── mvnw.cmd
-└── pom.xml
+├── config
+│   └── OpenApiConfig
+│
+├── controller
+│   ├── AutorController
+│   ├── CategoriaController
+│   ├── EditoraController
+│   ├── EmprestimoController
+│   ├── LeitorController
+│   └── LivroController
+│
+├── model
+│   ├── Autor
+│   ├── Categoria
+│   ├── Editora
+│   ├── Emprestimo
+│   ├── Leitor
+│   ├── Livro
+│   └── StatusEmprestimo
+│
+├── repository
+│   ├── AutorRepository
+│   ├── CategoriaRepository
+│   ├── EditoraRepository
+│   ├── EmprestimoRepository
+│   ├── LeitorRepository
+│   └── LivroRepository
+│
+├── service
+│   ├── AutorService
+│   ├── CategoriaService
+│   ├── EditoraService
+│   ├── EmprestimoService
+│   ├── LeitorService
+│   └── LivroService
+│
+└── ApiBibliotecaApplication
