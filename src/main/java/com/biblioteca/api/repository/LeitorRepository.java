@@ -7,5 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface LeitorRepository extends JpaRepository<Leitor, Long> {
 
-    Page<Leitor> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
+    Page<Leitor> findByNomeContainingIgnoreCase(
+            String nome,
+            Pageable pageable
+    );
+
+    boolean existsByEmail(String email);
 }

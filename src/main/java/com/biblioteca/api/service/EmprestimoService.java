@@ -31,18 +31,41 @@ public class EmprestimoService {
     }
 
     public Emprestimo salvar(Emprestimo emprestimo) {
+
+        validarDatas(emprestimo);
+
         return emprestimoRepository.save(emprestimo);
     }
 
     public Emprestimo atualizar(Long id, Emprestimo emprestimo) {
+
         Emprestimo emprestimoExistente = buscarPorId(id);
 
-        emprestimoExistente.setDataEmprestimo(emprestimo.getDataEmprestimo());
-        emprestimoExistente.setDataPrevistaDevolucao(emprestimo.getDataPrevistaDevolucao());
-        emprestimoExistente.setDataDevolucao(emprestimo.getDataDevolucao());
-        emprestimoExistente.setStatus(emprestimo.getStatus());
-        emprestimoExistente.setLeitor(emprestimo.getLeitor());
-        emprestimoExistente.setLivro(emprestimo.getLivro());
+        validarDatas(emprestimo);
+
+        emprestimoExistente.setDataEmprestimo(
+                emprestimo.getDataEmprestimo()
+        );
+
+        emprestimoExistente.setDataPrevistaDevolucao(
+                emprestimo.getDataPrevistaDevolucao()
+        );
+
+        emprestimoExistente.setDataDevolucao(
+                emprestimo.getDataDevolucao()
+        );
+
+        emprestimoExistente.setStatus(
+                emprestimo.getStatus()
+        );
+
+        emprestimoExistente.setLeitor(
+                emprestimo.getLeitor()
+        );
+
+        emprestimoExistente.setLivro(
+                emprestimo.getLivro()
+        );
 
         return emprestimoRepository.save(emprestimoExistente);
     }
@@ -56,6 +79,21 @@ public class EmprestimoService {
             StatusEmprestimo status,
             Pageable pageable) {
 
-        return emprestimoRepository.findByStatus(status, pageable);
+        return emprestimoRepository.findByStatus(
+                status,
+                pageable
+        );
+    }
+
+    private void validarDatas(Emprestimo emprestimo) {
+
+        if (emprestimo.getDataPrevistaDevolucao()
+                .isBefore(emprestimo.getDataEmprestimo())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A data prevista de devolução não pode ser anterior à data do empréstimo."
+            );
+        }
     }
 }

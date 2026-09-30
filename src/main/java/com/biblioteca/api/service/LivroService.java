@@ -30,11 +30,25 @@ public class LivroService {
     }
 
     public Livro salvar(Livro livro) {
+        if (livroRepository.existsByIsbn(livro.getIsbn())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "ISBN já cadastrado."
+            );
+        }
         return livroRepository.save(livro);
     }
 
     public Livro atualizar(Long id, Livro livro) {
         Livro livroExistente = buscarPorId(id);
+
+        if (!livroExistente.getIsbn().equals(livro.getIsbn())
+                && livroRepository.existsByIsbn(livro.getIsbn())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "ISBN já utilizado por outro livro."
+            );
+        }
 
         livroExistente.setTitulo(livro.getTitulo());
         livroExistente.setIsbn(livro.getIsbn());

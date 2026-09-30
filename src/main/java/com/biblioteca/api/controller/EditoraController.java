@@ -1,19 +1,23 @@
 package com.biblioteca.api.controller;
 
+import com.biblioteca.api.assembler.EditoraModelAssembler;
 import com.biblioteca.api.model.Editora;
 import com.biblioteca.api.service.EditoraService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,42 +31,37 @@ import org.springframework.web.bind.annotation.*;
 public class EditoraController {
 
     private final EditoraService editoraService;
+    private final EditoraModelAssembler assembler;
+    private final PagedResourcesAssembler<Editora> pagedResourcesAssembler;
 
-    public EditoraController(EditoraService editoraService) {
+    public EditoraController(
+            EditoraService editoraService,
+            EditoraModelAssembler assembler,
+            PagedResourcesAssembler<Editora> pagedResourcesAssembler) {
+
         this.editoraService = editoraService;
+        this.assembler = assembler;
+        this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
     @PostMapping
     @Operation(
-            operationId = "criarEditora",
             summary = "Cadastrar editora",
             description = "Cadastra uma nova editora."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "Editora cadastrada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Editora.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                            {
-                                              "id": 1,
-                                              "nome": "Arruda Editora",
-                                              "pais": "Brasil"
-                                            }
-                                            """
-                            )
-                    )
+                    description = "Editora cadastrada com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "Dados inválidos."
             )
     })
-    public ResponseEntity<Editora> criar(
-            @RequestBody(
+    public ResponseEntity<EntityModel<Editora>> criar(
+
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Dados da editora.",
                     required = true,
                     content = @Content(
@@ -70,102 +69,86 @@ public class EditoraController {
                             schema = @Schema(implementation = Editora.class),
                             examples = @ExampleObject(
                                     value = """
-                                            {
-                                              "nome": "Arruda Editora",
-                                              "pais": "Brasil"
-                                            }
-                                            """
+                                    {
+                                      "nome": "Arruda Editora",
+                                      "pais": "Brasil"
+                                    }
+                                    """
                             )
                     )
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody Editora editora) {
+
+            @Valid
+            @RequestBody Editora editora) {
+
+        Editora editoraCriada = editoraService.salvar(editora);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(editoraService.salvar(editora));
+                .body(assembler.toModel(editoraCriada));
     }
 
     @GetMapping
     @Operation(
-            operationId = "listarEditoras",
             summary = "Listar editoras",
-            description = "Lista as editoras cadastradas com paginação."
+            description = "Retorna uma lista paginada de editoras utilizando Pageable."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Editoras listadas com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)
-                    )
-            )
-    })
-    public ResponseEntity<Page<Editora>> listar(
-            @Parameter(
-                    description = "Número da página.",
-                    example = "0"
-            )
-            @RequestParam(defaultValue = "0") int page,
+    @ApiResponse(
+            responseCode = "200",
+            description = "Editoras listadas com sucesso."
+    )
+    public ResponseEntity<PagedModel<EntityModel<Editora>>> listar(
 
-            @Parameter(
-                    description = "Quantidade de registros por página.",
-                    example = "20"
+            @ParameterObject
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id"
             )
-            @RequestParam(defaultValue = "20") int size) {
+            Pageable pageable) {
+
+        Page<Editora> pagina = editoraService.listar(pageable);
 
         return ResponseEntity.ok(
-                editoraService.listar(PageRequest.of(page, size))
+                pagedResourcesAssembler.toModel(
+                        pagina,
+                        assembler
+                )
         );
     }
 
     @GetMapping("/{id}")
     @Operation(
-            operationId = "buscarEditoraPorId",
             summary = "Buscar editora por ID",
-            description = "Consulta uma editora pelo ID."
+            description = "Consulta uma editora pelo identificador."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Editora encontrada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Editora.class)
-                    )
+                    description = "Editora encontrada com sucesso."
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Editora não encontrada."
             )
     })
-    public ResponseEntity<Editora> buscarPorId(
-            @Parameter(
-                    description = "ID da editora.",
-                    required = true,
-                    example = "1"
-            )
+    public EntityModel<Editora> buscarPorId(
             @PathVariable Long id) {
 
-        return ResponseEntity.ok(
-                editoraService.buscarPorId(id)
-        );
+        Editora editora = editoraService.buscarPorId(id);
+
+        return assembler.toModel(editora);
     }
 
     @PutMapping("/{id}")
     @Operation(
-            operationId = "atualizarEditora",
             summary = "Atualizar editora",
             description = "Atualiza os dados de uma editora existente."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Editora atualizada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Editora.class)
-                    )
+                    description = "Editora atualizada com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -176,15 +159,11 @@ public class EditoraController {
                     description = "Editora não encontrada."
             )
     })
-    public ResponseEntity<Editora> atualizar(
-            @Parameter(
-                    description = "ID da editora.",
-                    required = true,
-                    example = "1"
-            )
+    public ResponseEntity<EntityModel<Editora>> atualizar(
+
             @PathVariable Long id,
 
-            @RequestBody(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Novos dados da editora.",
                     required = true,
                     content = @Content(
@@ -192,26 +171,30 @@ public class EditoraController {
                             schema = @Schema(implementation = Editora.class),
                             examples = @ExampleObject(
                                     value = """
-                                            {
-                                              "nome": "Arruda Editora",
-                                              "pais": "Brasil"
-                                            }
-                                            """
+                                    {
+                                      "nome": "Arruda Editora",
+                                      "pais": "Brasil"
+                                    }
+                                    """
                             )
                     )
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody Editora editora) {
+
+            @Valid
+            @RequestBody Editora editora) {
+
+        Editora editoraAtualizada =
+                editoraService.atualizar(id, editora);
 
         return ResponseEntity.ok(
-                editoraService.atualizar(id, editora)
+                assembler.toModel(editoraAtualizada)
         );
     }
 
     @DeleteMapping("/{id}")
     @Operation(
-            operationId = "excluirEditora",
             summary = "Excluir editora",
-            description = "Exclui uma editora pelo ID."
+            description = "Exclui uma editora pelo identificador."
     )
     @ApiResponses({
             @ApiResponse(
@@ -224,11 +207,6 @@ public class EditoraController {
             )
     })
     public ResponseEntity<Void> excluir(
-            @Parameter(
-                    description = "ID da editora.",
-                    required = true,
-                    example = "1"
-            )
             @PathVariable Long id) {
 
         editoraService.excluir(id);
@@ -238,44 +216,35 @@ public class EditoraController {
 
     @GetMapping("/buscar")
     @Operation(
-            operationId = "buscarEditorasPorNome",
             summary = "Buscar editoras por nome",
-            description = "Consulta editoras pelo nome ou parte do nome, com paginação."
+            description = "Consulta editoras pelo nome ou parte do nome utilizando paginação."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Busca realizada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)
-                    )
-            )
-    })
-    public ResponseEntity<Page<Editora>> buscarPorNome(
-            @Parameter(
-                    description = "Nome ou parte do nome da editora.",
-                    required = true,
-                    example = "Arruda"
-            )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Busca realizada com sucesso."
+    )
+    public ResponseEntity<PagedModel<EntityModel<Editora>>> buscarPorNome(
+
             @RequestParam String nome,
 
-            @Parameter(
-                    description = "Número da página.",
-                    example = "0"
+            @ParameterObject
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id"
             )
-            @RequestParam(defaultValue = "0") int page,
+            Pageable pageable) {
 
-            @Parameter(
-                    description = "Quantidade de registros por página.",
-                    example = "20"
-            )
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(
+        Page<Editora> pagina =
                 editoraService.buscarPorNome(
                         nome,
-                        PageRequest.of(page, size)
+                        pageable
+                );
+
+        return ResponseEntity.ok(
+                pagedResourcesAssembler.toModel(
+                        pagina,
+                        assembler
                 )
         );
     }

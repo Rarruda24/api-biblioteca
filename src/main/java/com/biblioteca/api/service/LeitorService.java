@@ -30,11 +30,29 @@ public class LeitorService {
     }
 
     public Leitor salvar(Leitor leitor) {
+
+        if (leitorRepository.existsByEmail(leitor.getEmail())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "E-mail já cadastrado."
+            );
+        }
+
         return leitorRepository.save(leitor);
     }
 
     public Leitor atualizar(Long id, Leitor leitor) {
+
         Leitor leitorExistente = buscarPorId(id);
+
+        if (!leitorExistente.getEmail().equals(leitor.getEmail())
+                && leitorRepository.existsByEmail(leitor.getEmail())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "E-mail já utilizado por outro leitor."
+            );
+        }
 
         leitorExistente.setNome(leitor.getNome());
         leitorExistente.setEmail(leitor.getEmail());
@@ -48,7 +66,13 @@ public class LeitorService {
         leitorRepository.delete(leitor);
     }
 
-    public Page<Leitor> buscarPorNome(String nome, Pageable pageable) {
-        return leitorRepository.findByNomeContainingIgnoreCase(nome, pageable);
+    public Page<Leitor> buscarPorNome(
+            String nome,
+            Pageable pageable) {
+
+        return leitorRepository.findByNomeContainingIgnoreCase(
+                nome,
+                pageable
+        );
     }
 }

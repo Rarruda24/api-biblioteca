@@ -1,19 +1,23 @@
 package com.biblioteca.api.controller;
 
+import com.biblioteca.api.assembler.LeitorModelAssembler;
 import com.biblioteca.api.model.Leitor;
 import com.biblioteca.api.service.LeitorService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,43 +31,40 @@ import org.springframework.web.bind.annotation.*;
 public class LeitorController {
 
     private final LeitorService leitorService;
+    private final LeitorModelAssembler assembler;
+    private final PagedResourcesAssembler<Leitor> pagedResourcesAssembler;
 
-    public LeitorController(LeitorService leitorService) {
+    public LeitorController(
+            LeitorService leitorService,
+            LeitorModelAssembler assembler,
+            PagedResourcesAssembler<Leitor> pagedResourcesAssembler) {
+
         this.leitorService = leitorService;
+        this.assembler = assembler;
+        this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
     @PostMapping
     @Operation(
-            operationId = "criarLeitor",
             summary = "Cadastrar leitor",
             description = "Cadastra um novo leitor."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "Leitor cadastrado com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Leitor.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                            {
-                                              "id": 1,
-                                              "nome": "Rodrigo Arruda",
-                                              "email": "rodrigo@teste.com",
-                                              "telefone": "11999999999"
-                                            }
-                                            """
-                            )
-                    )
+                    description = "Leitor cadastrado com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "Dados inválidos."
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "E-mail já cadastrado."
             )
     })
-    public ResponseEntity<Leitor> criar(
-            @RequestBody(
+    public ResponseEntity<EntityModel<Leitor>> criar(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Dados do leitor.",
                     required = true,
                     content = @Content(
@@ -71,105 +72,88 @@ public class LeitorController {
                             schema = @Schema(implementation = Leitor.class),
                             examples = @ExampleObject(
                                     value = """
-                                            {
-                                              "nome": "Rodrigo Arruda",
-                                              "email": "rodrigo@teste.com",
-                                              "telefone": "11999999999"
-                                            }
-                                            """
+                                    {
+                                      "nome": "Rodrigo Arruda",
+                                      "email": "rodrigo@teste.com",
+                                      "telefone": "11999999999"
+                                    }
+                                    """
                             )
                     )
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody Leitor leitor) {
+            @Valid
+            @RequestBody Leitor leitor) {
+
+        Leitor leitorCriado =
+                leitorService.salvar(leitor);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(leitorService.salvar(leitor));
+                .body(assembler.toModel(leitorCriado));
     }
 
     @GetMapping
     @Operation(
-            operationId = "listarLeitores",
             summary = "Listar leitores",
-            description = "Lista os leitores cadastrados com paginação."
+            description = "Retorna uma lista paginada de leitores utilizando Pageable."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Leitores listados com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)
-                    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Leitores listados com sucesso."
+    )
+    public ResponseEntity<PagedModel<EntityModel<Leitor>>> listar(
+            @ParameterObject
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id"
             )
-    })
-    public ResponseEntity<Page<Leitor>> listar(
-            @Parameter(
-                    description = "Número da página.",
-                    example = "0"
-            )
-            @RequestParam(defaultValue = "0") int page,
+            Pageable pageable) {
 
-            @Parameter(
-                    description = "Quantidade de registros por página.",
-                    example = "20"
-            )
-            @RequestParam(defaultValue = "20") int size) {
+        Page<Leitor> pagina =
+                leitorService.listar(pageable);
 
         return ResponseEntity.ok(
-                leitorService.listar(
-                        PageRequest.of(page, size)
+                pagedResourcesAssembler.toModel(
+                        pagina,
+                        assembler
                 )
         );
     }
 
     @GetMapping("/{id}")
     @Operation(
-            operationId = "buscarLeitorPorId",
             summary = "Buscar leitor por ID",
-            description = "Consulta um leitor pelo ID."
+            description = "Consulta um leitor pelo identificador."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Leitor encontrado com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Leitor.class)
-                    )
+                    description = "Leitor encontrado com sucesso."
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Leitor não encontrado."
             )
     })
-    public ResponseEntity<Leitor> buscarPorId(
-            @Parameter(
-                    description = "ID do leitor.",
-                    required = true,
-                    example = "1"
-            )
+    public EntityModel<Leitor> buscarPorId(
             @PathVariable Long id) {
 
-        return ResponseEntity.ok(
-                leitorService.buscarPorId(id)
-        );
+        Leitor leitor =
+                leitorService.buscarPorId(id);
+
+        return assembler.toModel(leitor);
     }
 
     @PutMapping("/{id}")
     @Operation(
-            operationId = "atualizarLeitor",
             summary = "Atualizar leitor",
             description = "Atualiza os dados de um leitor existente."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Leitor atualizado com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Leitor.class)
-                    )
+                    description = "Leitor atualizado com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -178,17 +162,15 @@ public class LeitorController {
             @ApiResponse(
                     responseCode = "404",
                     description = "Leitor não encontrado."
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "E-mail já utilizado por outro leitor."
             )
     })
-    public ResponseEntity<Leitor> atualizar(
-            @Parameter(
-                    description = "ID do leitor.",
-                    required = true,
-                    example = "1"
-            )
+    public ResponseEntity<EntityModel<Leitor>> atualizar(
             @PathVariable Long id,
-
-            @RequestBody(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Novos dados do leitor.",
                     required = true,
                     content = @Content(
@@ -196,27 +178,30 @@ public class LeitorController {
                             schema = @Schema(implementation = Leitor.class),
                             examples = @ExampleObject(
                                     value = """
-                                            {
-                                              "nome": "Rodrigo Arruda",
-                                              "email": "rodrigo@teste.com",
-                                              "telefone": "11999999999"
-                                            }
-                                            """
+                                    {
+                                      "nome": "Rodrigo Arruda",
+                                      "email": "rodrigo@teste.com",
+                                      "telefone": "11999999999"
+                                    }
+                                    """
                             )
                     )
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody Leitor leitor) {
+            @Valid
+            @RequestBody Leitor leitor) {
+
+        Leitor leitorAtualizado =
+                leitorService.atualizar(id, leitor);
 
         return ResponseEntity.ok(
-                leitorService.atualizar(id, leitor)
+                assembler.toModel(leitorAtualizado)
         );
     }
 
     @DeleteMapping("/{id}")
     @Operation(
-            operationId = "excluirLeitor",
             summary = "Excluir leitor",
-            description = "Exclui um leitor pelo ID."
+            description = "Exclui um leitor pelo identificador."
     )
     @ApiResponses({
             @ApiResponse(
@@ -229,11 +214,6 @@ public class LeitorController {
             )
     })
     public ResponseEntity<Void> excluir(
-            @Parameter(
-                    description = "ID do leitor.",
-                    required = true,
-                    example = "1"
-            )
             @PathVariable Long id) {
 
         leitorService.excluir(id);
@@ -243,44 +223,33 @@ public class LeitorController {
 
     @GetMapping("/buscar")
     @Operation(
-            operationId = "buscarLeitoresPorNome",
             summary = "Buscar leitores por nome",
-            description = "Consulta leitores pelo nome ou parte do nome, com paginação."
+            description = "Consulta leitores pelo nome ou parte do nome utilizando paginação."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Busca realizada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)
-                    )
-            )
-    })
-    public ResponseEntity<Page<Leitor>> buscarPorNome(
-            @Parameter(
-                    description = "Nome ou parte do nome do leitor.",
-                    required = true,
-                    example = "Rodrigo"
-            )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Busca realizada com sucesso."
+    )
+    public ResponseEntity<PagedModel<EntityModel<Leitor>>> buscarPorNome(
             @RequestParam String nome,
-
-            @Parameter(
-                    description = "Número da página.",
-                    example = "0"
+            @ParameterObject
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id"
             )
-            @RequestParam(defaultValue = "0") int page,
+            Pageable pageable) {
 
-            @Parameter(
-                    description = "Quantidade de registros por página.",
-                    example = "20"
-            )
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(
+        Page<Leitor> pagina =
                 leitorService.buscarPorNome(
                         nome,
-                        PageRequest.of(page, size)
+                        pageable
+                );
+
+        return ResponseEntity.ok(
+                pagedResourcesAssembler.toModel(
+                        pagina,
+                        assembler
                 )
         );
     }

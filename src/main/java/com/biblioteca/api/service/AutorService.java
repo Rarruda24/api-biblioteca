@@ -30,13 +30,7 @@ public class AutorService {
     }
 
     public Autor salvar(Autor autor) {
-        System.out.println("DATA RECEBIDA NO SERVICE: " + autor.getDataNascimento());
-
-        Autor autorSalvo = autorRepository.save(autor);
-
-        System.out.println("DATA RETORNADA PELO SAVE: " + autorSalvo.getDataNascimento());
-
-        return autorSalvo;
+        return autorRepository.save(autor);
     }
 
     public Autor atualizar(Long id, Autor autor) {

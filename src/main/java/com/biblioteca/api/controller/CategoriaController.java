@@ -1,19 +1,23 @@
 package com.biblioteca.api.controller;
 
+import com.biblioteca.api.assembler.CategoriaModelAssembler;
 import com.biblioteca.api.model.Categoria;
 import com.biblioteca.api.service.CategoriaService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,42 +31,40 @@ import org.springframework.web.bind.annotation.*;
 public class CategoriaController {
 
     private final CategoriaService categoriaService;
+    private final CategoriaModelAssembler assembler;
+    private final PagedResourcesAssembler<Categoria> pagedResourcesAssembler;
 
-    public CategoriaController(CategoriaService categoriaService) {
+    public CategoriaController(
+            CategoriaService categoriaService,
+            CategoriaModelAssembler assembler,
+            PagedResourcesAssembler<Categoria> pagedResourcesAssembler) {
+
         this.categoriaService = categoriaService;
+        this.assembler = assembler;
+        this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
     @PostMapping
     @Operation(
-            operationId = "criarCategoria",
             summary = "Cadastrar categoria",
             description = "Cadastra uma nova categoria."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "Categoria cadastrada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Categoria.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                            {
-                                              "id": 1,
-                                              "nome": "Romance",
-                                              "descricao": "Obras literárias de romance."
-                                            }
-                                            """
-                            )
-                    )
+                    description = "Categoria cadastrada com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "Dados inválidos."
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Categoria já cadastrada."
             )
     })
-    public ResponseEntity<Categoria> criar(
-            @RequestBody(
+    public ResponseEntity<EntityModel<Categoria>> criar(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Dados da categoria.",
                     required = true,
                     content = @Content(
@@ -70,102 +72,87 @@ public class CategoriaController {
                             schema = @Schema(implementation = Categoria.class),
                             examples = @ExampleObject(
                                     value = """
-                                            {
-                                              "nome": "Romance",
-                                              "descricao": "Obras literárias de romance."
-                                            }
-                                            """
+                                    {
+                                      "nome": "Romance",
+                                      "descricao": "Obras literárias de romance."
+                                    }
+                                    """
                             )
                     )
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody Categoria categoria) {
+            @Valid
+            @RequestBody Categoria categoria) {
+
+        Categoria categoriaCriada =
+                categoriaService.salvar(categoria);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(categoriaService.salvar(categoria));
+                .body(assembler.toModel(categoriaCriada));
     }
 
     @GetMapping
     @Operation(
-            operationId = "listarCategorias",
             summary = "Listar categorias",
-            description = "Lista as categorias cadastradas com paginação."
+            description = "Retorna uma lista paginada de categorias utilizando Pageable."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Categorias listadas com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)
-                    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Categorias listadas com sucesso."
+    )
+    public ResponseEntity<PagedModel<EntityModel<Categoria>>> listar(
+            @ParameterObject
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id"
             )
-    })
-    public ResponseEntity<Page<Categoria>> listar(
-            @Parameter(
-                    description = "Número da página.",
-                    example = "0"
-            )
-            @RequestParam(defaultValue = "0") int page,
+            Pageable pageable) {
 
-            @Parameter(
-                    description = "Quantidade de registros por página.",
-                    example = "20"
-            )
-            @RequestParam(defaultValue = "20") int size) {
+        Page<Categoria> pagina =
+                categoriaService.listar(pageable);
 
         return ResponseEntity.ok(
-                categoriaService.listar(PageRequest.of(page, size))
+                pagedResourcesAssembler.toModel(
+                        pagina,
+                        assembler
+                )
         );
     }
 
     @GetMapping("/{id}")
     @Operation(
-            operationId = "buscarCategoriaPorId",
             summary = "Buscar categoria por ID",
-            description = "Consulta uma categoria pelo ID."
+            description = "Consulta uma categoria pelo identificador."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Categoria encontrada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Categoria.class)
-                    )
+                    description = "Categoria encontrada com sucesso."
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Categoria não encontrada."
             )
     })
-    public ResponseEntity<Categoria> buscarPorId(
-            @Parameter(
-                    description = "ID da categoria.",
-                    required = true,
-                    example = "1"
-            )
+    public EntityModel<Categoria> buscarPorId(
             @PathVariable Long id) {
 
-        return ResponseEntity.ok(
-                categoriaService.buscarPorId(id)
-        );
+        Categoria categoria =
+                categoriaService.buscarPorId(id);
+
+        return assembler.toModel(categoria);
     }
 
     @PutMapping("/{id}")
     @Operation(
-            operationId = "atualizarCategoria",
             summary = "Atualizar categoria",
             description = "Atualiza os dados de uma categoria existente."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Categoria atualizada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Categoria.class)
-                    )
+                    description = "Categoria atualizada com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -174,17 +161,15 @@ public class CategoriaController {
             @ApiResponse(
                     responseCode = "404",
                     description = "Categoria não encontrada."
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Nome já utilizado por outra categoria."
             )
     })
-    public ResponseEntity<Categoria> atualizar(
-            @Parameter(
-                    description = "ID da categoria.",
-                    required = true,
-                    example = "1"
-            )
+    public ResponseEntity<EntityModel<Categoria>> atualizar(
             @PathVariable Long id,
-
-            @RequestBody(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Novos dados da categoria.",
                     required = true,
                     content = @Content(
@@ -192,26 +177,29 @@ public class CategoriaController {
                             schema = @Schema(implementation = Categoria.class),
                             examples = @ExampleObject(
                                     value = """
-                                            {
-                                              "nome": "Romance",
-                                              "descricao": "Obras literárias de romance."
-                                            }
-                                            """
+                                    {
+                                      "nome": "Romance",
+                                      "descricao": "Obras literárias de romance."
+                                    }
+                                    """
                             )
                     )
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody Categoria categoria) {
+            @Valid
+            @RequestBody Categoria categoria) {
+
+        Categoria categoriaAtualizada =
+                categoriaService.atualizar(id, categoria);
 
         return ResponseEntity.ok(
-                categoriaService.atualizar(id, categoria)
+                assembler.toModel(categoriaAtualizada)
         );
     }
 
     @DeleteMapping("/{id}")
     @Operation(
-            operationId = "excluirCategoria",
             summary = "Excluir categoria",
-            description = "Exclui uma categoria pelo ID."
+            description = "Exclui uma categoria pelo identificador."
     )
     @ApiResponses({
             @ApiResponse(
@@ -224,11 +212,6 @@ public class CategoriaController {
             )
     })
     public ResponseEntity<Void> excluir(
-            @Parameter(
-                    description = "ID da categoria.",
-                    required = true,
-                    example = "1"
-            )
             @PathVariable Long id) {
 
         categoriaService.excluir(id);
@@ -238,44 +221,33 @@ public class CategoriaController {
 
     @GetMapping("/buscar")
     @Operation(
-            operationId = "buscarCategoriasPorNome",
             summary = "Buscar categorias por nome",
-            description = "Consulta categorias pelo nome ou parte do nome, com paginação."
+            description = "Consulta categorias pelo nome ou parte do nome utilizando paginação."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Busca realizada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)
-                    )
-            )
-    })
-    public ResponseEntity<Page<Categoria>> buscarPorNome(
-            @Parameter(
-                    description = "Nome ou parte do nome da categoria.",
-                    required = true,
-                    example = "Romance"
-            )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Busca realizada com sucesso."
+    )
+    public ResponseEntity<PagedModel<EntityModel<Categoria>>> buscarPorNome(
             @RequestParam String nome,
-
-            @Parameter(
-                    description = "Número da página.",
-                    example = "0"
+            @ParameterObject
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id"
             )
-            @RequestParam(defaultValue = "0") int page,
+            Pageable pageable) {
 
-            @Parameter(
-                    description = "Quantidade de registros por página.",
-                    example = "20"
-            )
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(
+        Page<Categoria> pagina =
                 categoriaService.buscarPorNome(
                         nome,
-                        PageRequest.of(page, size)
+                        pageable
+                );
+
+        return ResponseEntity.ok(
+                pagedResourcesAssembler.toModel(
+                        pagina,
+                        assembler
                 )
         );
     }

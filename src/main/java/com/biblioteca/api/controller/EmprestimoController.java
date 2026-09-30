@@ -1,20 +1,24 @@
 package com.biblioteca.api.controller;
 
+import com.biblioteca.api.assembler.EmprestimoModelAssembler;
 import com.biblioteca.api.model.Emprestimo;
 import com.biblioteca.api.model.StatusEmprestimo;
 import com.biblioteca.api.service.EmprestimoService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,50 +32,40 @@ import org.springframework.web.bind.annotation.*;
 public class EmprestimoController {
 
     private final EmprestimoService emprestimoService;
+    private final EmprestimoModelAssembler assembler;
+    private final PagedResourcesAssembler<Emprestimo> pagedResourcesAssembler;
 
-    public EmprestimoController(EmprestimoService emprestimoService) {
+    public EmprestimoController(
+            EmprestimoService emprestimoService,
+            EmprestimoModelAssembler assembler,
+            PagedResourcesAssembler<Emprestimo> pagedResourcesAssembler) {
+
         this.emprestimoService = emprestimoService;
+        this.assembler = assembler;
+        this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
     @PostMapping
     @Operation(
-            operationId = "criarEmprestimo",
             summary = "Cadastrar empréstimo",
             description = "Cadastra um novo empréstimo de livro."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "Empréstimo cadastrado com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Emprestimo.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                            {
-                                              "id": 1,
-                                              "dataEmprestimo": "2026-09-29",
-                                              "dataPrevistaDevolucao": "2026-10-06",
-                                              "dataDevolucao": null,
-                                              "status": "ATIVO",
-                                              "leitor": {
-                                                "id": 1
-                                              },
-                                              "livro": {
-                                                "id": 1
-                                              }
-                                            }
-                                            """
-                            )
-                    )
+                    description = "Empréstimo cadastrado com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "Dados inválidos."
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Regra de negócio não permitida. A data prevista de devolução não pode ser anterior à data do empréstimo."
             )
     })
-    public ResponseEntity<Emprestimo> criar(
-            @RequestBody(
+    public ResponseEntity<EntityModel<Emprestimo>> criar(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Dados do empréstimo.",
                     required = true,
                     content = @Content(
@@ -79,110 +73,95 @@ public class EmprestimoController {
                             schema = @Schema(implementation = Emprestimo.class),
                             examples = @ExampleObject(
                                     value = """
-                                            {
-                                              "dataEmprestimo": "2026-09-29",
-                                              "dataPrevistaDevolucao": "2026-10-06",
-                                              "dataDevolucao": null,
-                                              "status": "ATIVO",
-                                              "leitor": {
-                                                "id": 1
-                                              },
-                                              "livro": {
-                                                "id": 1
-                                              }
-                                            }
-                                            """
+                                    {
+                                      "dataEmprestimo": "2026-09-29",
+                                      "dataPrevistaDevolucao": "2026-10-06",
+                                      "dataDevolucao": null,
+                                      "status": "ATIVO",
+                                      "leitor": {
+                                        "id": 1
+                                      },
+                                      "livro": {
+                                        "id": 1
+                                      }
+                                    }
+                                    """
                             )
                     )
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody Emprestimo emprestimo) {
+            @Valid
+            @RequestBody Emprestimo emprestimo) {
+
+        Emprestimo emprestimoCriado =
+                emprestimoService.salvar(emprestimo);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(emprestimoService.salvar(emprestimo));
+                .body(assembler.toModel(emprestimoCriado));
     }
 
     @GetMapping
     @Operation(
-            operationId = "listarEmprestimos",
             summary = "Listar empréstimos",
-            description = "Lista os empréstimos cadastrados com paginação."
+            description = "Retorna uma lista paginada de empréstimos utilizando Pageable."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Empréstimos listados com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)
-                    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Empréstimos listados com sucesso."
+    )
+    public ResponseEntity<PagedModel<EntityModel<Emprestimo>>> listar(
+            @ParameterObject
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id"
             )
-    })
-    public ResponseEntity<Page<Emprestimo>> listar(
-            @Parameter(
-                    description = "Número da página.",
-                    example = "0"
-            )
-            @RequestParam(defaultValue = "0") int page,
+            Pageable pageable) {
 
-            @Parameter(
-                    description = "Quantidade de registros por página.",
-                    example = "20"
-            )
-            @RequestParam(defaultValue = "20") int size) {
+        Page<Emprestimo> pagina =
+                emprestimoService.listar(pageable);
 
         return ResponseEntity.ok(
-                emprestimoService.listar(PageRequest.of(page, size))
+                pagedResourcesAssembler.toModel(
+                        pagina,
+                        assembler
+                )
         );
     }
 
     @GetMapping("/{id}")
     @Operation(
-            operationId = "buscarEmprestimoPorId",
             summary = "Buscar empréstimo por ID",
-            description = "Consulta um empréstimo pelo ID."
+            description = "Consulta um empréstimo pelo identificador."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Empréstimo encontrado com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Emprestimo.class)
-                    )
+                    description = "Empréstimo encontrado com sucesso."
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "Empréstimo não encontrado."
             )
     })
-    public ResponseEntity<Emprestimo> buscarPorId(
-            @Parameter(
-                    description = "ID do empréstimo.",
-                    required = true,
-                    example = "1"
-            )
+    public EntityModel<Emprestimo> buscarPorId(
             @PathVariable Long id) {
 
-        return ResponseEntity.ok(
-                emprestimoService.buscarPorId(id)
-        );
+        Emprestimo emprestimo =
+                emprestimoService.buscarPorId(id);
+
+        return assembler.toModel(emprestimo);
     }
 
     @PutMapping("/{id}")
     @Operation(
-            operationId = "atualizarEmprestimo",
             summary = "Atualizar empréstimo",
             description = "Atualiza os dados de um empréstimo existente."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Empréstimo atualizado com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Emprestimo.class)
-                    )
+                    description = "Empréstimo atualizado com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -191,17 +170,15 @@ public class EmprestimoController {
             @ApiResponse(
                     responseCode = "404",
                     description = "Empréstimo não encontrado."
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Regra de negócio não permitida. A data prevista de devolução não pode ser anterior à data do empréstimo."
             )
     })
-    public ResponseEntity<Emprestimo> atualizar(
-            @Parameter(
-                    description = "ID do empréstimo.",
-                    required = true,
-                    example = "1"
-            )
+    public ResponseEntity<EntityModel<Emprestimo>> atualizar(
             @PathVariable Long id,
-
-            @RequestBody(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Novos dados do empréstimo.",
                     required = true,
                     content = @Content(
@@ -209,34 +186,37 @@ public class EmprestimoController {
                             schema = @Schema(implementation = Emprestimo.class),
                             examples = @ExampleObject(
                                     value = """
-                                            {
-                                              "dataEmprestimo": "2026-09-29",
-                                              "dataPrevistaDevolucao": "2026-10-06",
-                                              "dataDevolucao": "2026-10-05",
-                                              "status": "DEVOLVIDO",
-                                              "leitor": {
-                                                "id": 1
-                                              },
-                                              "livro": {
-                                                "id": 1
-                                              }
-                                            }
-                                            """
+                                    {
+                                      "dataEmprestimo": "2026-09-29",
+                                      "dataPrevistaDevolucao": "2026-10-06",
+                                      "dataDevolucao": "2026-10-05",
+                                      "status": "DEVOLVIDO",
+                                      "leitor": {
+                                        "id": 1
+                                      },
+                                      "livro": {
+                                        "id": 1
+                                      }
+                                    }
+                                    """
                             )
                     )
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody Emprestimo emprestimo) {
+            @Valid
+            @RequestBody Emprestimo emprestimo) {
+
+        Emprestimo emprestimoAtualizado =
+                emprestimoService.atualizar(id, emprestimo);
 
         return ResponseEntity.ok(
-                emprestimoService.atualizar(id, emprestimo)
+                assembler.toModel(emprestimoAtualizado)
         );
     }
 
     @DeleteMapping("/{id}")
     @Operation(
-            operationId = "excluirEmprestimo",
             summary = "Excluir empréstimo",
-            description = "Exclui um empréstimo pelo ID."
+            description = "Exclui um empréstimo pelo identificador."
     )
     @ApiResponses({
             @ApiResponse(
@@ -249,11 +229,6 @@ public class EmprestimoController {
             )
     })
     public ResponseEntity<Void> excluir(
-            @Parameter(
-                    description = "ID do empréstimo.",
-                    required = true,
-                    example = "1"
-            )
             @PathVariable Long id) {
 
         emprestimoService.excluir(id);
@@ -263,49 +238,39 @@ public class EmprestimoController {
 
     @GetMapping("/buscar")
     @Operation(
-            operationId = "buscarEmprestimosPorStatus",
             summary = "Buscar empréstimos por status",
-            description = "Consulta empréstimos pelo status, com paginação."
+            description = "Consulta empréstimos pelo status utilizando paginação."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Busca realizada com sucesso.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = Page.class)
-                    )
+                    description = "Busca realizada com sucesso."
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "Status informado é inválido."
             )
     })
-    public ResponseEntity<Page<Emprestimo>> buscarPorStatus(
-            @Parameter(
-                    description = "Status do empréstimo.",
-                    required = true,
-                    example = "ATIVO",
-                    schema = @Schema(implementation = StatusEmprestimo.class)
-            )
+    public ResponseEntity<PagedModel<EntityModel<Emprestimo>>> buscarPorStatus(
             @RequestParam StatusEmprestimo status,
-
-            @Parameter(
-                    description = "Número da página.",
-                    example = "0"
+            @ParameterObject
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id"
             )
-            @RequestParam(defaultValue = "0") int page,
+            Pageable pageable) {
 
-            @Parameter(
-                    description = "Quantidade de registros por página.",
-                    example = "20"
-            )
-            @RequestParam(defaultValue = "20") int size) {
-
-        return ResponseEntity.ok(
+        Page<Emprestimo> pagina =
                 emprestimoService.buscarPorStatus(
                         status,
-                        PageRequest.of(page, size)
+                        pageable
+                );
+
+        return ResponseEntity.ok(
+                pagedResourcesAssembler.toModel(
+                        pagina,
+                        assembler
                 )
         );
     }

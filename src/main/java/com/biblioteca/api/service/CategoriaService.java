@@ -30,11 +30,29 @@ public class CategoriaService {
     }
 
     public Categoria salvar(Categoria categoria) {
+
+        if (categoriaRepository.existsByNome(categoria.getNome())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Categoria já cadastrada."
+            );
+        }
+
         return categoriaRepository.save(categoria);
     }
 
     public Categoria atualizar(Long id, Categoria categoria) {
+
         Categoria categoriaExistente = buscarPorId(id);
+
+        if (!categoriaExistente.getNome().equals(categoria.getNome())
+                && categoriaRepository.existsByNome(categoria.getNome())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Nome já utilizado por outra categoria."
+            );
+        }
 
         categoriaExistente.setNome(categoria.getNome());
         categoriaExistente.setDescricao(categoria.getDescricao());
@@ -47,7 +65,13 @@ public class CategoriaService {
         categoriaRepository.delete(categoria);
     }
 
-    public Page<Categoria> buscarPorNome(String nome, Pageable pageable) {
-        return categoriaRepository.findByNomeContainingIgnoreCase(nome, pageable);
+    public Page<Categoria> buscarPorNome(
+            String nome,
+            Pageable pageable) {
+
+        return categoriaRepository.findByNomeContainingIgnoreCase(
+                nome,
+                pageable
+        );
     }
 }
