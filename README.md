@@ -202,27 +202,60 @@ A API utiliza os códigos de status HTTP de acordo com o resultado de cada opera
 
 ### Sucesso
 
-- `200 OK` — operação realizada com sucesso, como consultas e atualizações.
-- `201 Created` — recurso criado com sucesso.
-- `204 No Content` — recurso excluído com sucesso.
+* `200 OK` — operação realizada com sucesso, como consultas e atualizações.
+* `201 Created` — recurso criado com sucesso.
+* `204 No Content` — recurso excluído com sucesso.
 
 ### Erros do cliente
 
-- `400 Bad Request` — dados enviados são inválidos ou algum parâmetro não pôde ser processado.
-- `404 Not Found` — recurso solicitado não foi encontrado.
-- `409 Conflict` — conflito com um recurso existente ou com um campo que deve ser único.
+* `400 Bad Request` — dados enviados são inválidos ou algum parâmetro não pôde ser processado.
+* `404 Not Found` — recurso solicitado não foi encontrado.
+* `409 Conflict` — conflito com um recurso existente ou com um campo que deve ser único.
+* `422 Unprocessable Entity` — requisição está sintaticamente correta, mas não pode ser processada devido a uma regra de negócio.
 
-### Erros do servidor
+Um exemplo de utilização do código `422` ocorre no cadastro ou atualização de um empréstimo quando a data prevista de devolução é anterior à data do empréstimo.
 
-- `500 Internal Server Error` — erro interno inesperado durante o processamento da requisição.
+Exemplo de requisição:
+
+```json
+{
+  "dataEmprestimo": "2026-10-10",
+  "dataPrevistaDevolucao": "2026-10-05",
+  "dataDevolucao": null,
+  "status": "ATIVO",
+  "leitor": {
+    "id": 1
+  },
+  "livro": {
+    "id": 1
+  }
+}
+```
+
+Nesse caso, a API retorna:
+
+```text
+422 Unprocessable Content
+```
+
+Exemplo de resposta:
+
+```json
+{
+  "timestamp": "2026-09-30T22:32:56.459Z",
+  "status": 422,
+  "error": "Unprocessable Content",
+  "path": "/api/emprestimos"
+}
+```
 
 ### Possíveis códigos HTTP
 
 Dependendo da requisição e do comportamento do Spring Boot, outros códigos HTTP também podem ser retornados:
 
-- `405 Method Not Allowed` — método HTTP utilizado não é permitido para o endpoint.
-- `415 Unsupported Media Type` — tipo de conteúdo enviado não é suportado pela API.
-- `422 Unprocessable Entity` — requisição está sintaticamente correta, mas os dados não podem ser processados devido a regras de validação ou negócio.
+* `405 Method Not Allowed` — método HTTP utilizado não é permitido para o endpoint.
+* `415 Unsupported Media Type` — tipo de conteúdo enviado não é suportado pela API.
+* `500 Internal Server Error` — erro interno inesperado durante o processamento da requisição.
 
 ## Arquitetura da aplicação
 
