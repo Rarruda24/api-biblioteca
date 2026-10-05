@@ -20,73 +20,66 @@ public class OpenApiConfig {
                         .title("API Biblioteca")
                         .version("1.0.0")
                         .description("""
-                                API RESTful desenvolvida para o gerenciamento de uma biblioteca.
+                                API RESTful para gerenciamento de uma biblioteca.
 
-                                A API disponibiliza operações para gerenciamento de autores,
-                                editoras, livros, categorias, leitores e empréstimos.
-
-                                Principais funcionalidades:
-                                - Cadastro, consulta, atualização e exclusão de autores.
-                                - Cadastro, consulta, atualização e exclusão de editoras.
-                                - Cadastro, consulta, atualização e exclusão de livros.
-                                - Cadastro, consulta, atualização e exclusão de categorias.
-                                - Cadastro, consulta, atualização e exclusão de leitores.
-                                - Cadastro, consulta, atualização e exclusão de empréstimos.
+                                Recursos:
+                                - Autores, editoras, livros, categorias, leitores e empréstimos.
+                                - Operações de cadastro, consulta, atualização e exclusão.
                                 - Consultas personalizadas por nome, título e status.
-                                - Paginação nas operações de consulta de recursos.
-                                - Validação dos dados recebidos pela API.
+                                - Paginação e ordenação utilizando "page", "size" e "sort".
+                                - Validação dos dados recebidos.
+                                - Controle de conflitos em campos únicos.
+                                - HATEOAS para navegação entre os recursos.
 
-                                Fluxo recomendado de utilização:
+                                Fluxo recomendado:
+                                1. Cadastrar autor e editora.
+                                2. Cadastrar categorias e leitor.
+                                3. Cadastrar o livro informando autor, editora e categorias.
+                                4. Cadastrar o empréstimo informando leitor e livro.
+                                5. Consultar, atualizar ou excluir os recursos conforme necessário.
 
-                                1. Cadastrar um autor.
-                                2. Cadastrar uma editora.
-                                3. Cadastrar uma categoria.
-                                4. Cadastrar um leitor.
-                                5. Cadastrar um livro informando o autor, a editora e a categoria já cadastrados.
-                                6. Cadastrar um empréstimo informando o leitor e o livro já cadastrados.
+                                Paginação e ordenação:
 
-                                Relacionamentos entre os recursos:
+                                "page" define a página, iniciando em 0.
+                                "size" define a quantidade de registros por página.
+                                "sort" define o campo e a direção da ordenação.
 
-                                - Um autor pode possuir vários livros.
-                                - Uma editora pode possuir vários livros.
-                                - Um livro pode pertencer a várias categorias.
-                                - Um leitor pode possuir um empréstimo.
-                                - Um empréstimo está associado a um livro.
+                                Exemplos:
+                                GET /api/livros?page=0&size=10&sort=titulo,asc
+                                GET /api/livros?page=0&size=10&sort=titulo,desc
 
-                                Paginação:
+                                Códigos de resposta:
 
-                                As operações de listagem e consulta utilizam paginação.
-                                O parâmetro "page" representa o número da página, iniciando em 0.
-                                O parâmetro "size" representa a quantidade de registros por página.
+                                - 200 OK: operação realizada com sucesso.
+                                - 201 Created: recurso criado com sucesso.
+                                - 204 No Content: recurso excluído com sucesso.
+                                - 400 Bad Request: dados ou parâmetros inválidos.
+                                - 404 Not Found: recurso não encontrado.
+                                - 409 Conflict: conflito com recurso ou campo único existente.
+                                - 422 Unprocessable Content: dados válidos, mas que violam uma regra de negócio.
+                                - 405 Method Not Allowed: método HTTP não permitido.
+                                - 415 Unsupported Media Type: tipo de conteúdo não suportado.
+                                - 500 Internal Server Error: erro interno inesperado.
 
-                                Validação:
+                                Exemplos de conflitos:
+                                - ISBN de livro já cadastrado.
+                                - E-mail de leitor já cadastrado.
+                                - Nome de categoria já cadastrado.
 
-                                Os dados enviados para cadastro e atualização são validados
-                                conforme as regras definidas em cada entidade.
+                                Regra de negócio (422):
+                                A data prevista de devolução não pode ser anterior à data do empréstimo.
 
-                                Códigos de resposta utilizados:
+                                HATEOAS:
 
-                                - 200: Operação realizada com sucesso.
-                                - 201: Recurso criado com sucesso.
-                                - 204: Recurso excluído com sucesso.
-                                - 400: Dados enviados são inválidos.
-                                - 404: Recurso não encontrado.
+                                Os recursos podem conter links de navegação, como "self" e "delete".
+                                As consultas paginadas utilizam PagedModel com informações de paginação e links.
 
-                                Após os cadastros, podem ser realizadas as operações de consulta,
-                                atualização e exclusão dos recursos conforme necessário.
+                                Tecnologias:
+                                Java 17, Spring Boot, Spring Web, Spring Data JPA,
+                                Hibernate, H2, Bean Validation, Springdoc OpenAPI,
+                                Swagger UI e Spring HATEOAS.
 
-                                Tecnologias utilizadas:
-                                - Java 17
-                                - Spring Boot
-                                - Spring Data JPA
-                                - H2 Database
-                                - Spring Validation
-                                - Springdoc OpenAPI
-
-                                Projeto desenvolvido para fins acadêmicos, aplicando conceitos
-                                de desenvolvimento de APIs REST, persistência de dados,
-                                relacionamentos entre entidades, validação e documentação
-                                de endpoints.
+                                Projeto desenvolvido para fins acadêmicos.
                                 """)
                         .contact(new Contact()
                                 .name("Rodrigo Arruda")));
