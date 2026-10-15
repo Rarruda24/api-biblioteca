@@ -1,3 +1,4 @@
+
 # API Biblioteca
 
 API REST desenvolvida em Java com Spring Boot para gerenciamento de uma biblioteca.
@@ -62,17 +63,17 @@ O projeto foi criado utilizando o Spring Initializr.
 
 As configurações utilizadas na criação inicial foram:
 
-| Configuração | Valor                |
+| Configuração | Valor |
 | ------------ | -------------------- |
-| Project      | Maven                |
-| Language     | Java                 |
-| Spring Boot  | 4.1.1                |
-| Group        | `com.biblioteca`     |
-| Artifact     | `api-biblioteca`     |
-| Name         | `API Biblioteca`     |
+| Project | Maven |
+| Language | Java |
+| Spring Boot | 4.1.1 |
+| Group | `com.biblioteca` |
+| Artifact | `api-biblioteca` |
+| Name | `API Biblioteca` |
 | Package name | `com.biblioteca.api` |
-| Packaging    | Jar                  |
-| Java         | 17                   |
+| Packaging | Jar |
+| Java | 17 |
 
 ## Dependências
 
@@ -182,13 +183,29 @@ Nas operações de listagem, a API utiliza `PagedModel` para representar as cole
 
 A documentação dos endpoints é disponibilizada através do Springdoc OpenAPI e Swagger UI.
 
-Após iniciar a aplicação, a interface do Swagger pode ser acessada em:
+### Swagger UI — Render
+
+A aplicação publicada pode ser acessada pelo link:
+
+[https://api-biblioteca-6xow.onrender.com/swagger-ui/index.html](https://api-biblioteca-6xow.onrender.com/swagger-ui/index.html)
+
+### Especificação OpenAPI — Render
+
+A especificação OpenAPI da aplicação publicada pode ser acessada em:
+
+[https://api-biblioteca-6xow.onrender.com/v3/api-docs](https://api-biblioteca-6xow.onrender.com/v3/api-docs)
+
+### Swagger UI — Execução local
+
+Após iniciar a aplicação localmente, a interface do Swagger pode ser acessada em:
 
 ```text
 http://localhost:8080/swagger-ui/index.html
 ```
 
-A especificação OpenAPI pode ser acessada em:
+### Especificação OpenAPI — Execução local
+
+A especificação OpenAPI local pode ser acessada em:
 
 ```text
 http://localhost:8080/v3/api-docs
