@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Biblioteca — Frontend</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="container">
+  <header class="topo"><div><p class="eyebrow">SPRING BOOT · REST API</p><h1>Biblioteca</h1><p>Frontend conectado à API, com operações CRUD e visualização das requisições e respostas HTTP.</p></div><div class="api-config"><label for="origemApi">Servidor da API</label><select id="origemApi"><option value="local">Local · localhost:8080</option><option value="render">Render · produção</option></select><a href="https://api-biblioteca-6xow.onrender.com/swagger-ui/index.html" target="_blank" rel="noreferrer">Abrir Swagger ↗</a></div></header>
+  <nav id="menu" class="menu"><button class="active" data-modulo="livros">Livros</button><button data-modulo="autores">Autores</button><button data-modulo="editoras">Editoras</button><button data-modulo="categorias">Categorias</button><button data-modulo="leitores">Leitores</button><button data-modulo="emprestimos">Empréstimos</button></nav>
+  <section class="panel"><div class="section-head"><div><p class="eyebrow">GERENCIAMENTO</p><h2 id="tituloModulo">Livros</h2></div></div>
+    <h3 id="tituloFormulario">Cadastrar registro</h3><form id="formulario" class="form-grid"></form><div class="form-actions"><button id="btnCadastrar" class="primary" type="button">Cadastrar</button><button id="btnCancelar" class="secondary" type="button" hidden>Cancelar edição</button></div><p id="mensagem" role="status" aria-live="polite"></p>
+  </section>
+  <section class="panel"><div class="list-header"><div><p class="eyebrow">DADOS DA API</p><h2 id="tituloLista">Lista de livros</h2><p id="paginacaoInfo" class="muted"></p></div><button id="btnAtualizar" class="secondary" type="button">Atualizar lista</button></div><div id="lista" class="lista">Carregando...</div><div class="pagination"><label>Tamanho <select id="tamanhoPagina"><option>5</option><option selected>10</option><option>20</option><option>50</option></select></label><div><button id="paginaAnterior" class="secondary" type="button">Anterior</button><button id="proximaPagina" class="secondary" type="button">Próxima</button></div></div></section>
+  <section class="panel inspector"><div class="list-header"><div><p class="eyebrow">DEBUG HTTP</p><h2>Request / Response</h2><p class="muted">Exibe método, URL, JSON enviado, status, cabeçalhos e corpo recebido da última chamada.</p></div><button id="limparInspector" class="secondary" type="button">Limpar</button></div>
+    <div class="http-meta"><div><span>Método</span><strong id="requestMetodo">—</strong></div><div><span>URL</span><code id="requestUrl">—</code></div><div><span>Status</span><strong id="responseStatus">Sem resposta</strong></div></div>
+    <div class="json-grid"><div><h3>Request body</h3><pre id="requestBody">(sem corpo)</pre></div><div><h3>Response body</h3><pre id="responseBody">(sem corpo)</pre></div></div><h3>Response headers</h3><pre id="responseHeaders">—</pre>
+  </section>
+  <footer>Frontend demonstrativo da API Biblioteca · <a href="https://api-biblioteca-6xow.onrender.com/swagger-ui/index.html" target="_blank" rel="noreferrer">Documentação Swagger</a></footer>
+</main><script src="app.js"></script>
+</body></html>
