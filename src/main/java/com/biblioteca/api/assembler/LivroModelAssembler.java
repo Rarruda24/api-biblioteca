@@ -13,6 +13,11 @@ public class LivroModelAssembler
 
     @Override
     public EntityModel<Livro> toModel(Livro livro) {
+        var selfVersionado = VersionedLinks.forCurrentRequest("livros", livro.getId(), "self");
+        var deleteVersionado = VersionedLinks.forCurrentRequest("livros", livro.getId(), "delete");
+        var updateVersionado = VersionedLinks.forCurrentRequest("livros", livro.getId(), "update");
+        if (selfVersionado != null && deleteVersionado != null && updateVersionado != null)
+            return EntityModel.of(livro, selfVersionado, updateVersionado, deleteVersionado);
 
         return EntityModel.of(
                 livro,

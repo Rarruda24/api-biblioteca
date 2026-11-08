@@ -13,6 +13,11 @@ public class LeitorModelAssembler
 
     @Override
     public EntityModel<Leitor> toModel(Leitor leitor) {
+        var selfVersionado = VersionedLinks.forCurrentRequest("leitores", leitor.getId(), "self");
+        var deleteVersionado = VersionedLinks.forCurrentRequest("leitores", leitor.getId(), "delete");
+        var updateVersionado = VersionedLinks.forCurrentRequest("leitores", leitor.getId(), "update");
+        if (selfVersionado != null && deleteVersionado != null && updateVersionado != null)
+            return EntityModel.of(leitor, selfVersionado, updateVersionado, deleteVersionado);
 
         return EntityModel.of(
                 leitor,

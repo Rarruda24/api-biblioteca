@@ -13,6 +13,11 @@ public class CategoriaModelAssembler
 
     @Override
     public EntityModel<Categoria> toModel(Categoria categoria) {
+        var selfVersionado = VersionedLinks.forCurrentRequest("categorias", categoria.getId(), "self");
+        var deleteVersionado = VersionedLinks.forCurrentRequest("categorias", categoria.getId(), "delete");
+        var updateVersionado = VersionedLinks.forCurrentRequest("categorias", categoria.getId(), "update");
+        if (selfVersionado != null && deleteVersionado != null && updateVersionado != null)
+            return EntityModel.of(categoria, selfVersionado, updateVersionado, deleteVersionado);
 
         return EntityModel.of(
                 categoria,

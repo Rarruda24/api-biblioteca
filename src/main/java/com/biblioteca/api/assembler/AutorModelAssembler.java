@@ -13,6 +13,11 @@ public class AutorModelAssembler
 
     @Override
     public EntityModel<Autor> toModel(Autor autor) {
+        var selfVersionado = VersionedLinks.forCurrentRequest("autores", autor.getId(), "self");
+        var deleteVersionado = VersionedLinks.forCurrentRequest("autores", autor.getId(), "delete");
+        var updateVersionado = VersionedLinks.forCurrentRequest("autores", autor.getId(), "update");
+        if (selfVersionado != null && deleteVersionado != null && updateVersionado != null)
+            return EntityModel.of(autor, selfVersionado, updateVersionado, deleteVersionado);
 
         return EntityModel.of(
                 autor,

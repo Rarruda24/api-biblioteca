@@ -38,10 +38,12 @@ public class Livro {
     private Integer quantidadePaginas;
 
     @ManyToOne
+    @NotNull(message = "O autor do livro e obrigatorio")
     @JoinColumn(name = "autor_id", nullable = false)
     private Autor autor;
 
     @ManyToOne
+    @NotNull(message = "A editora do livro e obrigatoria")
     @JoinColumn(name = "editora_id", nullable = false)
     private Editora editora;
 

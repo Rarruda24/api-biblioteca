@@ -13,6 +13,11 @@ public class EmprestimoModelAssembler
 
     @Override
     public EntityModel<Emprestimo> toModel(Emprestimo emprestimo) {
+        var selfVersionado = VersionedLinks.forCurrentRequest("emprestimos", emprestimo.getId(), "self");
+        var deleteVersionado = VersionedLinks.forCurrentRequest("emprestimos", emprestimo.getId(), "delete");
+        var updateVersionado = VersionedLinks.forCurrentRequest("emprestimos", emprestimo.getId(), "update");
+        if (selfVersionado != null && deleteVersionado != null && updateVersionado != null)
+            return EntityModel.of(emprestimo, selfVersionado, updateVersionado, deleteVersionado);
 
         return EntityModel.of(
                 emprestimo,

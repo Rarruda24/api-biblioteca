@@ -24,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/emprestimos")
+@RequestMapping({"/api/emprestimos", "/api/v1/emprestimos", "/api/v2/emprestimos"})
 @Tag(
         name = "Empréstimos",
         description = "Gerenciamento de empréstimos de livros."

@@ -13,6 +13,11 @@ public class EditoraModelAssembler
 
     @Override
     public EntityModel<Editora> toModel(Editora editora) {
+        var selfVersionado = VersionedLinks.forCurrentRequest("editoras", editora.getId(), "self");
+        var deleteVersionado = VersionedLinks.forCurrentRequest("editoras", editora.getId(), "delete");
+        var updateVersionado = VersionedLinks.forCurrentRequest("editoras", editora.getId(), "update");
+        if (selfVersionado != null && deleteVersionado != null && updateVersionado != null)
+            return EntityModel.of(editora, selfVersionado, updateVersionado, deleteVersionado);
 
         return EntityModel.of(
                 editora,

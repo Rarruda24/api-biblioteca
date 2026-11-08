@@ -23,7 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/autores")
+@RequestMapping({"/api/autores", "/api/v1/autores", "/api/v2/autores"})
 @Tag(
         name = "Autores",
         description = "Gerenciamento de autores."

@@ -29,10 +29,12 @@ public class Emprestimo {
     private StatusEmprestimo status;
 
     @OneToOne
+    @NotNull(message = "O leitor do emprestimo e obrigatorio")
     @JoinColumn(name = "leitor_id", nullable = false, unique = true)
     private Leitor leitor;
 
     @ManyToOne
+    @NotNull(message = "O livro do emprestimo e obrigatorio")
     @JoinColumn(name = "livro_id", nullable = false)
     private Livro livro;
 

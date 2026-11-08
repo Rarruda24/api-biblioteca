@@ -23,7 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/editoras")
+@RequestMapping({"/api/editoras", "/api/v1/editoras", "/api/v2/editoras"})
 @Tag(
         name = "Editoras",
         description = "Gerenciamento de editoras."

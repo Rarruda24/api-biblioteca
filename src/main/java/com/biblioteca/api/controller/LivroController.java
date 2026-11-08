@@ -21,9 +21,11 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/livros")
+@RequestMapping({"/api/livros", "/api/v1/livros", "/api/v2/livros"})
 @Tag(
         name = "Livros",
         description = "Gerenciamento de livros da biblioteca"
@@ -54,7 +56,9 @@ public class LivroController {
             responseCode = "200",
             description = "Livros listados com sucesso."
     )
-    public ResponseEntity<PagedModel<EntityModel<Livro>>> listar(
+    public ResponseEntity<?> listar(
+            @RequestHeader(value = "X-API-Version", required = false) String apiVersion,
+            HttpServletRequest request,
             @ParameterObject
             @PageableDefault(
                     page = 0,
@@ -66,6 +70,18 @@ public class LivroController {
 
         Page<Livro> pagina = livroService.listar(pageable);
 
+        String caminho = request.getRequestURI();
+        String versao = caminho.startsWith("/api/v1/") ? "1"
+                : caminho.startsWith("/api/v2/") ? "2" : apiVersion;
+        if (versao == null || versao.isBlank()) versao = "2";
+        if (!"1".equals(versao) && !"2".equals(versao)) {
+            return ResponseEntity.badRequest().body(new ErroVersao("Utilize X-API-Version: 1 ou 2."));
+        }
+        if ("1".equals(versao)) {
+            return ResponseEntity.ok(new RespostaV1(1, pagina.getTotalElements(), pagina.getContent().stream()
+                    .map(livro -> new LivroV1(livro.getId(), livro.getTitulo())).toList()));
+        }
+
         return ResponseEntity.ok(
                 pagedResourcesAssembler.toModel(
                         pagina,
@@ -73,6 +89,10 @@ public class LivroController {
                 )
         );
     }
+
+    public record LivroV1(Long id, String titulo) { }
+    public record RespostaV1(int versao, long total, List<LivroV1> livros) { }
+    public record ErroVersao(String erro) { }
 
 
     @PostMapping
