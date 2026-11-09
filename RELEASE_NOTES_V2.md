@@ -50,7 +50,3 @@ A V2 acrescenta recursos de segurança, controle de tráfego e confiabilidade à
 ### Compatibilidade
 
 A V1 preserva seu contrato original: continua disponível sem `X-API-Key` e sem `X-Idempotency-Key`. Os requisitos de autenticação, idempotência e Rate Limit são aplicados à V2 e às operações protegidas de gerenciamento de chaves.
-
-### Verificação
-
-A implementação foi validada com `mvnw clean test`: 12 testes passaram, cobrindo autenticação e permissões, bloqueio progressivo, idempotência, Rate Limit, CORS, rotas V1/V2, validações e documentação OpenAPI.
