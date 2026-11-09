@@ -24,6 +24,8 @@ class AuthenticationFailureTrackerTests {
         assertThat(registerFive(tracker, "client")).isEqualTo(Duration.ofHours(1));
         clock.advance(Duration.ofHours(1));
         assertThat(registerFive(tracker, "client")).isEqualTo(Duration.ofHours(24));
+        clock.advance(Duration.ofHours(24));
+        assertThat(registerFive(tracker, "client")).isEqualTo(Duration.ofHours(24));
     }
 
     @Test

@@ -34,7 +34,8 @@ public class AuthenticationFailureTracker {
         Instant now = clock.instant();
         State state = attemptsByClient.get(client);
         if (state == null) return null;
-        if (Duration.between(state.lastFailure, now).compareTo(RESET_AFTER_IDLE) >= 0) {
+        Instant inactivityAnchor = state.blockedUntil == null ? state.lastFailure : state.blockedUntil;
+        if (Duration.between(inactivityAnchor, now).compareTo(RESET_AFTER_IDLE) >= 0) {
             attemptsByClient.remove(client);
             return null;
         }
@@ -42,6 +43,7 @@ public class AuthenticationFailureTracker {
         Duration remaining = Duration.between(now, state.blockedUntil);
         if (remaining.isNegative() || remaining.isZero()) {
             state.blockedUntil = null;
+            state.lastFailure = now;
             return null;
         }
         return remaining;
