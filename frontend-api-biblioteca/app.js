@@ -132,7 +132,8 @@ function carregarExemploPost() {
   if(!config.exemplo){mostrarMensagem("Este endpoint não recebe um corpo POST.",true);return;}
   $("#consoleMetodo").value="POST";
   $("#consoleCaminho").value=config.endpoint;
-  $("#consoleBody").value=formatarJSON(config.exemplo);
+  const valores=obterValoresExemplo(config);
+  $("#consoleBody").value=formatarJSON(config.montar?config.montar(valores):valores);
   mostrarMensagem(`Exemplo POST de ${config.titulo} carregado. O exemplo de livro e empréstimo depende dos registros relacionados indicados.`);
 }
 
@@ -144,8 +145,23 @@ function extrairItens(dados) {
   if(dados?._integrado) { const a=Object.values(dados._integrado).find(Array.isArray); if(a) return a; }
   return [];
 }
-function criarCampos(valores={}) {
+function obterValoresExemplo(config) {
+  const exemplo=JSON.parse(JSON.stringify(config.exemplo||{}));
+  const valores=config.preencher?config.preencher(exemplo):exemplo;
+  if(config===modulos.emprestimos) {
+    const hoje=new Date(), devolucao=new Date(hoje);
+    devolucao.setDate(devolucao.getDate()+7);
+    const dataLocal=data=>`${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,"0")}-${String(data.getDate()).padStart(2,"0")}`;
+    valores.dataEmprestimo=dataLocal(hoje);
+    valores.dataPrevistaDevolucao=dataLocal(devolucao);
+  }
+  if(config===modulos.leitores) valores.email=`leitor.${Date.now()}@exemplo.com`;
+  if(config===modulos.livros) valores.isbn=String(Date.now());
+  return valores;
+}
+function criarCampos(valores) {
   const config=modulos[moduloAtual]; formulario.innerHTML="";
+  if(valores===undefined) valores=obterValoresExemplo(config);
   config.campos.forEach(c=>{
     const wrap=document.createElement("label"); wrap.className="campo"; wrap.textContent=c.rotulo;
     let input;

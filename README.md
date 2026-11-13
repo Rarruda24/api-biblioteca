@@ -212,6 +212,8 @@ Planos e limites:
 
 No Swagger, execute `POST /api/chaves-api`, copie o campo `apiKey` da resposta e cole somente o valor retornado no botão Authorize. Gerar uma chave não a aplica automaticamente às requisições.
 
+Os termos de serviço estão publicados em JSON em [`terms-of-service.json`](src/main/resources/static/terms-of-service.json) e vinculados à informação OpenAPI exibida no Swagger.
+
 ### Idempotência
 
 Todo POST de recurso V2 exige `X-Idempotency-Key`. Repetir a mesma chave, rota e corpo reproduz a resposta original sem criar outro registro. Usar a mesma chave com outro corpo retorna 409. Falhas não são armazenadas; as chaves idempotentes expiram após 24 horas e requisições simultâneas são protegidas contra duplicidade. A criação de API Key e a V1 não exigem esse cabeçalho.

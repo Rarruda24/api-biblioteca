@@ -26,6 +26,7 @@ import java.util.Map;
 @Configuration
 @EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class OpenApiConfig {
+    private static final String TERMOS_SERVICO_URL = "/terms-of-service.json";
     private static final String ERRO_422 = "422 Entidade N\u00e3o Process\u00e1vel - a requisi\u00e7\u00e3o \u00e9 sintaticamente correta, mas n\u00e3o pode ser processada devido a uma regra de neg\u00f3cio. Exemplo: no cadastro ou atualiza\u00e7\u00e3o de empr\u00e9stimo, a data prevista de devolu\u00e7\u00e3o \u00e9 anterior \u00e0 data do empr\u00e9stimo.";
     private static final String FLUXO_RECOMENDADO = "Fluxo recomendado:\n"
             + "1. Cadastrar um autor.\n2. Cadastrar uma editora.\n3. Cadastrar uma categoria.\n"
@@ -36,9 +37,9 @@ public class OpenApiConfig {
             Como começar:
 
             1. Gere uma chave em POST /api/chaves-api.
-            2. Copie o valor bib_... retornado.
+            2. Copie e guarde o valor bib_... retornado. A chave completa é exibida uma única vez, durante a geração; depois, não pode ser consultada novamente.
             3. Clique em Authorize e cole somente esse valor. A chave não é aplicada automaticamente ao ser gerada.
-            4. Envie X-API-Version: 2 nas rotas V2. Todo POST de recurso também exige X-Idempotency-Key.
+            4. Todo POST de recurso exige X-Idempotency-Key.
 
             Limites por plano:
 
@@ -65,10 +66,10 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI bibliotecaOpenAPI() {
         return new OpenAPI().info(new Info().title("API Biblioteca").version("2.0.0")
+                        .termsOfService(TERMOS_SERVICO_URL)
                         .description("""
-                                API REST da biblioteca. Gere a chave por POST /api/chaves-api, copie o valor bib_... retornado, clique em Authorize e cole somente esse valor. A chave nao e aplicada automaticamente ao gerar.
-                                Planos: BASICO 30, PROFISSIONAL 100 e PREMIUM 300 requisicoes por minuto. POST de recurso requer X-Idempotency-Key.
-                                Use os grupos V1 e V2 no seletor do Swagger. As rotas V2 dos seis modulos documentam X-API-Version: 2.
+                                API REST da biblioteca. Consulte os termos de serviço no link acima.
+                                Selecione o grupo V1 ou V2 no seletor do Swagger.
 
                                 Fluxo recomendado:
                                 1. Cadastrar um autor.
@@ -93,7 +94,8 @@ public class OpenApiConfig {
             openApi.getPaths().forEach((path, pathItem) -> pathItem.readOperations().forEach(operation -> {
                 if (operation.getParameters() == null) operation.setParameters(new ArrayList<>());
                 boolean v2 = path.startsWith("/api/v2/") || path.equals("/api/chaves-api");
-                if (path.startsWith("/api/v2/")) addHeader(operation, "X-API-Version", "Versao do contrato. Envie 2 nas rotas V2.", false, List.of("2"));
+                boolean getLivros = path.equals("/api/v2/livros") && pathItem.getGet() == operation;
+                if (path.startsWith("/api/v2/") && !getLivros) addHeader(operation, "X-API-Version", "Versao do contrato. Envie 2 nas rotas V2.", false, List.of("2"));
                 boolean post = pathItem.getPost() == operation;
                 boolean put = pathItem.getPut() == operation;
                 boolean delete = pathItem.getDelete() == operation;
@@ -161,8 +163,15 @@ public class OpenApiConfig {
     @Bean
     public GroupedOpenApi apiV1() {
         return GroupedOpenApi.builder().group("V1").pathsToMatch("/api/v1/**")
-                .addOpenApiCustomizer(openApi -> openApi.info(new Info().title("API Biblioteca").version("1.0.0")
-                        .description(DESCRICAO_V1)))
+                .addOpenApiCustomizer(openApi -> {
+                    openApi.info(new Info().title("API Biblioteca").version("1.0.0")
+                            .termsOfService(TERMOS_SERVICO_URL)
+                            .description(DESCRICAO_V1));
+                    if (openApi.getComponents() != null) {
+                        openApi.getComponents().setSecuritySchemes(null);
+                    }
+                    openApi.setSecurity(new ArrayList<>());
+                })
                 .build();
     }
 
@@ -170,6 +179,7 @@ public class OpenApiConfig {
     public GroupedOpenApi apiV2() {
         return GroupedOpenApi.builder().group("V2").pathsToMatch("/api/v2/**", "/api/chaves-api")
                 .addOpenApiCustomizer(openApi -> openApi.info(new Info().title("API Biblioteca").version("2.0.0")
+                        .termsOfService(TERMOS_SERVICO_URL)
                         .description(DESCRICAO_V2)))
                 .build();
     }

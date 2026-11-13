@@ -4,6 +4,7 @@ import com.biblioteca.api.assembler.LivroModelAssembler;
 import com.biblioteca.api.model.Livro;
 import com.biblioteca.api.service.LivroService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -57,6 +58,7 @@ public class LivroController {
             description = "Livros listados com sucesso."
     )
     public ResponseEntity<?> listar(
+            @Parameter(hidden = true)
             @RequestHeader(value = "X-API-Version", required = false) String apiVersion,
             HttpServletRequest request,
             @ParameterObject

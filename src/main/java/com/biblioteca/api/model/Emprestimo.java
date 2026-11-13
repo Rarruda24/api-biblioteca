@@ -28,9 +28,9 @@ public class Emprestimo {
     @Column(nullable = false, length = 20)
     private StatusEmprestimo status;
 
-    @OneToOne
+    @ManyToOne
     @NotNull(message = "O leitor do emprestimo e obrigatorio")
-    @JoinColumn(name = "leitor_id", nullable = false, unique = true)
+    @JoinColumn(name = "leitor_id", nullable = false)
     private Leitor leitor;
 
     @ManyToOne

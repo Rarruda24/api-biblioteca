@@ -1,0 +1,32 @@
+﻿{
+  "titulo": "Termos de Serviço — API Biblioteca",
+  "versao": "1.0",
+  "idioma": "pt-BR",
+  "ultimaAtualizacao": "2026-11-13",
+  "termos": [
+    {
+      "secao": "Uso do serviço",
+      "texto": "A API Biblioteca é disponibilizada para gerenciamento e consulta de dados de biblioteca. Ao utilizar a API, você concorda em cumprir estes termos e as leis aplicáveis."
+    },
+    {
+      "secao": "Chaves de API",
+      "texto": "A chave completa é exibida uma única vez, no momento da geração. Guarde-a em local seguro, não a compartilhe publicamente e envie-a somente no cabeçalho X-API-Key. O titular é responsável pelo uso e pela proteção da chave. Se houver suspeita de exposição, revogue-a e gere outra."
+    },
+    {
+      "secao": "Limites e disponibilidade",
+      "texto": "O acesso à V2 está sujeito aos limites por minuto do plano associado à chave e aos controles técnicos documentados. A disponibilidade pode ser afetada por manutenção, falhas ou fatores fora do controle do operador."
+    },
+    {
+      "secao": "Uso proibido",
+      "texto": "Não utilize a API para violar leis, comprometer sua segurança, interferir no serviço, tentar acessar dados ou recursos sem autorização, ou contornar os limites de uso."
+    },
+    {
+      "secao": "Dados e responsabilidade",
+      "texto": "Você é responsável pelos dados enviados e deve possuir autorização para tratá-los. Não envie dados pessoais desnecessários ou informações sensíveis. O serviço é fornecido no estado em que se encontra, dentro dos limites permitidos pela legislação aplicável."
+    },
+    {
+      "secao": "Alterações e contato",
+      "texto": "Estes termos podem ser atualizados. A versão vigente será publicada neste arquivo. Para dúvidas sobre estes termos, entre em contato com o responsável pela implantação da API."
+    }
+  ]
+}
